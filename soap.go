@@ -29,13 +29,18 @@ type Config struct {
 	Dump bool
 }
 
+// HTTPClient is a http client interface
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // SoapClient return new *Client to handle the requests with the WSDL
-func SoapClient(wsdl string, httpClient *http.Client) (*Client, error) {
+func SoapClient(wsdl string, httpClient HTTPClient) (*Client, error) {
 	return SoapClientWithConfig(wsdl, httpClient, &Config{Dump: false})
 }
 
 // SoapClientWithConfig return new *Client to handle the requests with the WSDL
-func SoapClientWithConfig(wsdl string, httpClient *http.Client, config *Config) (*Client, error) {
+func SoapClientWithConfig(wsdl string, httpClient HTTPClient, config *Config) (*Client, error) {
 	_, err := url.Parse(wsdl)
 	if err != nil {
 		return nil, err
@@ -58,7 +63,7 @@ func SoapClientWithConfig(wsdl string, httpClient *http.Client, config *Config) 
 // Client struct hold all the informations about WSDL,
 // request and response of the server
 type Client struct {
-	HTTPClient   *http.Client
+	HTTPClient   HTTPClient
 	AutoAction   bool
 	URL          string
 	HeaderName   string
@@ -243,7 +248,7 @@ func (p *process) doRequest(url string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func (p *process) httpClient() *http.Client {
+func (p *process) httpClient() HTTPClient {
 	if p.Client.HTTPClient != nil {
 		return p.Client.HTTPClient
 	}
